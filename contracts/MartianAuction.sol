@@ -8,7 +8,7 @@ contract SimpleAuction {
     // absolute unix timestamps (seconds since 1970-01-01)
     // or time periods in seconds.
     address payable public beneficiary;
-    uint public auctionEndTime;
+    //uint public auctionEndTime;
 
     // Current state of the auction.
     address public highestBidder;
@@ -19,7 +19,8 @@ contract SimpleAuction {
 
     // Set to true at the end, disallows any change.
     // By default initialized to `false`.
-    bool ended;
+    // Set ended as a public variable so the MartianMarket contract can access it with an automatic getter
+    bool public ended;
 
     // Events that will be emitted on changes.
     event HighestBidIncreased(address bidder, uint amount);
@@ -34,18 +35,18 @@ contract SimpleAuction {
     /// seconds bidding time on behalf of the
     /// beneficiary address `_beneficiary`.
     constructor(
-        uint _biddingTime,
+        // uint _biddingTime,
         address payable _beneficiary
     ) public {
         beneficiary = _beneficiary;
-        auctionEndTime = now + _biddingTime;
+        // auctionEndTime = now + _biddingTime;
     }
 
     /// Bid on the auction with the value sent
     /// together with this transaction.
     /// The value will only be refunded if the
     /// auction is not won.
-    function bid() public payable {
+    function bid(address payable sender) public payable {
         // No arguments are necessary, all
         // information is already part of
         // the transaction. The keyword payable
@@ -54,9 +55,9 @@ contract SimpleAuction {
 
         // Revert the call if the bidding
         // period is over.
-        require(
-            now <= auctionEndTime,
-            "Auction already ended."
+        // require(
+           //  now <= auctionEndTime,
+            // "Auction already ended."
         );
 
         // If the bid is not higher, send the
@@ -65,6 +66,9 @@ contract SimpleAuction {
             msg.value > highestBid,
             "There already is a higher bid."
         );
+        
+        // only allows the beneficiary to end the auction
+        require(msg.sender == beneficiary, "Beneficiary required for authorization.")
 
         if (highestBid != 0) {
             // Sending back the money by simply using
@@ -114,8 +118,10 @@ contract SimpleAuction {
         // external contracts.
 
         // 1. Conditions
-        require(now >= auctionEndTime, "Auction not yet ended.");
+       //  require(now >= auctionEndTime, "Auction not yet ended.");
         require(!ended, "auctionEnd has already been called.");
+        // added a require in auctionEnded that only allows the beneficiary to end the auction 
+        require(msg.sender == beneficiary, "Beneficiary required for authorization.")
 
         // 2. Effects
         ended = true;
